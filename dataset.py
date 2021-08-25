@@ -17,8 +17,7 @@
 from __future__ import division
 
 import os
-from xml.dom.minidom import parse
-import xml.dom.minidom
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -87,7 +86,7 @@ def preprocess_fn(image, box, file, is_training):
                         #c = true_boxes[t, 4].astype('int32')
                         y_true[l][j, i, k, 0:4] = true_boxes[t, 0:4]
                         y_true[l][j, i, k, 4] = 1.
-                        y_true[l][j, i, k, 5:5 + num_classes] = true_boxes[t, 4: 4 + num_classes]
+                        y_true[l][j, i, k, 5:5 + num_classes] = true_boxes[t, 4:4 + num_classes]
 
         pad_gt_box0 = np.zeros(shape=[ConfigYOLOV3ResNet18._NUM_BOXES, 4], dtype=np.float32)
         pad_gt_box1 = np.zeros(shape=[ConfigYOLOV3ResNet18._NUM_BOXES, 4], dtype=np.float32)
@@ -253,57 +252,23 @@ def filter_valid_data(label_file):
     label_df = pd.read_csv(label_file)
     label_dict = dict(list(label_df.groupby('image_id')))
     
-#     annotations: List[Any] = json.load(open(label_file))
-
-#     image_dict: Dict[str, List[List[int]]] = {}
-#     image_files: List[str]=[]
     label_group_by = label_df.groupby('image_id')
     label_group_by = label_group_by.apply(lambda x: x[['xmin','ymin','xmax','ymax','p0','p1','p2','p3']].to_numpy())
     return label_group_by.keys(), label_group_by
     
-    
-#     label_id={'person':0, 'face':1, 'mask':2}
-#     all_files = os.listdir(image_dir)
-
-#     image_dict = {}
-#     image_files=[]
-#     for i in all_files:
-#         if (i[-3:]=='jpg' or i[-4:]=='jpeg') and i not in image_dict:
-#             image_files.append(i)
-#             label=[]
-#             xml_path = os.path.join(image_dir,i[:-3]+'xml')
-            
-#             if not os.path.exists(xml_path):
-#                 label=[[0,0,0,0,0]]
-#                 image_dict[i]=label
-#                 continue
-#             DOMTree = xml.dom.minidom.parse(xml_path)
-#             collection = DOMTree.documentElement
-#             # 在集合中获取所有框
-#             object_ = collection.getElementsByTagName("object")
-#             for m in object_:
-#                 temp=[]
-#                 name = m.getElementsByTagName('name')[0]
-#                 class_num = label_id[name.childNodes[0].data]
-#                 bndbox = m.getElementsByTagName('bndbox')[0]
-#                 xmin = xy_local(bndbox,'xmin')
-#                 ymin = xy_local(bndbox,'ymin')
-#                 xmax = xy_local(bndbox,'xmax')
-#                 ymax = xy_local(bndbox,'ymax')
-#                 temp.append(int(xmin))
-#                 temp.append(int(ymin))
-#                 temp.append(int(xmax))
-#                 temp.append(int(ymax))
-#                 temp.append(class_num)
-#                 label.append(temp)
-#             image_dict[i]=label
-#     return image_files, image_dict
 
 
-def data_to_mindrecord_byte_image(image_dir, mindrecord_dir, prefix, file_num, label_file):
+def data_to_mindrecord_byte_image(
+    image_dir: Path, mindrecord_dir: Path, prefix, file_num, label_file,
+    train_test_split=0.8
+):
     """Create MindRecord file by image_dir and anno_path."""
-    mindrecord_path = os.path.join(mindrecord_dir, prefix)
-    writer = FileWriter(mindrecord_path, file_num)
+    mindrecord_train_path = mindrecord_dir / 'train' / prefix)
+    mindrecord_test_path = mindrecord_dir / 'test' / prefix)
+    
+    writer_train = FileWriter(mindrecord_train_path, file_num)
+    writer_test = FileWriter(mindrecord_test_path, file_num)
+    
     image_files, image_anno_dict = filter_valid_data(label_file)
     num_classes = ConfigYOLOV3ResNet18.num_classes
 
@@ -312,9 +277,12 @@ def data_to_mindrecord_byte_image(image_dir, mindrecord_dir, prefix, file_num, l
         "annotation": {"type": "int32", "shape": [-1, 4 + num_classes]},
         "file": {"type": "string"},
     }
-    writer.add_schema(yolo_json, "yolo_json")
+    writer_train.add_schema(yolo_json, "yolo_json")
+    writer_test.add_schema(yolo_json, "yolo_json")
 
-    for image_name in image_files:
+    split_at = len(image_files)*train_test_split
+    
+    for idx, image_name in enumerate(image_files):
         image_path = os.path.join(image_dir, image_name + '.bmp')
         with open(image_path, 'rb') as f:
             img = f.read()
@@ -325,8 +293,13 @@ def data_to_mindrecord_byte_image(image_dir, mindrecord_dir, prefix, file_num, l
         
         #print(annos.shape)
         row = {"image": img, "annotation": annos, "file": image_name+'.bmp'}
-        writer.write_raw_data([row])
-    writer.commit()
+        if idx < split_at:
+            writer_train.write_raw_data([row])
+        else:
+            writer_test.write_raw_data([row])
+
+    writer_train.commit()
+    writer_test.commit()
 
 
 def create_yolo_dataset(mindrecord_dir, batch_size=32, repeat_num=1, device_num=1, rank=0,
