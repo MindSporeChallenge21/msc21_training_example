@@ -263,8 +263,8 @@ def data_to_mindrecord_byte_image(
     train_test_split=0.8
 ):
     """Create MindRecord file by image_dir and anno_path."""
-    mindrecord_train_path = mindrecord_dir / 'train' / prefix)
-    mindrecord_test_path = mindrecord_dir / 'test' / prefix)
+    mindrecord_train_path = str(mindrecord_dir / 'train' / prefix)
+    mindrecord_test_path = str(mindrecord_dir / 'test' / prefix)
     
     writer_train = FileWriter(mindrecord_train_path, file_num)
     writer_test = FileWriter(mindrecord_test_path, file_num)
