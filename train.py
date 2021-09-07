@@ -16,15 +16,13 @@ from mindspore.train.serialization import load_checkpoint, load_param_into_net
 from mindspore.common.initializer import initializer
 from mindspore.common import set_seed
 
-from src.yolov3 import yolov3_resnet18, YoloWithLossCell, TrainingWrapper
-from src.dataset import create_yolo_dataset, data_to_mindrecord_byte_image
-from src.config import ConfigYOLOV3ResNet18
+from yolov3 import yolov3_resnet18, YoloWithLossCell, TrainingWrapper
+from dataset import create_yolo_dataset, data_to_mindrecord_byte_image
+from config import ConfigYOLOV3ResNet18
 
 import moxing as mox
 
 set_seed(1)
-
-sys.path.append('..')
 
 def get_lr(learning_rate, start_step, global_step, decay_step, decay_rate, steps=False):
     """Set learning rate."""
