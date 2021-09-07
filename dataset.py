@@ -259,7 +259,9 @@ def filter_valid_data(label_file):
 
 
 def data_to_mindrecord_byte_image(
-    image_dir: Path, mindrecord_dir: Path, prefix, file_num, label_file,
+    image_dir: Path, mindrecord_dir: Path, prefix, file_num, 
+    label_file,
+    metadata_file,
     train_test_split=0.8
 ):
     """Create MindRecord file by image_dir and anno_path."""
@@ -271,6 +273,8 @@ def data_to_mindrecord_byte_image(
     
     image_files, image_anno_dict = filter_valid_data(label_file)
     num_classes = ConfigYOLOV3ResNet18.num_classes
+    
+    metadata_df = pd.read_csv(metadata_file)
 
     yolo_json = {
         "image": {"type": "bytes"},
@@ -286,7 +290,9 @@ def data_to_mindrecord_byte_image(
         image_path = os.path.join(image_dir, image_name + '.bmp')
         with open(image_path, 'rb') as f:
             img = f.read()
-        (h,w,_) = cv2.imread(str(image_path)).shape
+        image_metadata = metadata_df[metadata_df.image_id == image_name].iloc[0]
+        w = image_metadata.width;
+        h = image_metadata.height;
         image_anno_dict[image_name][:,[0,2]] *= w
         image_anno_dict[image_name][:,[1,3]] *= h
         annos = np.array(image_anno_dict[image_name],dtype=np.int32)
