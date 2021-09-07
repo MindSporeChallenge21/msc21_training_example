@@ -253,7 +253,7 @@ def filter_valid_data(label_file):
     label_dict = dict(list(label_df.groupby('image_id')))
     
     label_group_by = label_df.groupby('image_id')
-    label_group_by = label_group_by.apply(lambda x: x[['xmin','ymin','xmax','ymax','p0','p1','p2','p3']].to_numpy())
+    label_group_by = label_group_by.apply(lambda x: x[['xmin','ymin','xmax','ymax','scc','ac','sclc','nsclc']].to_numpy())
     return label_group_by.keys(), label_group_by
     
 
