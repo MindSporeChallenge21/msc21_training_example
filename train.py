@@ -4,6 +4,7 @@ import argparse
 import ast
 from easydict import EasyDict as edict
 import shutil
+from pathlib import Path
 
 import numpy as np
 import mindspore.nn as nn
@@ -151,10 +152,10 @@ if __name__ == '__main__':
 
     if os.path.exists(cfg.ckpt_dir):
         shutil.rmtree(cfg.ckpt_dir)
-    data_path = './data/' 
+    data_path = './dataset/' 
     if not os.path.exists(data_path):
         mox.file.copy_parallel(src_url=cfg.data_url, dst_url=data_path)
-    label_path = './label.csv' 
+    label_path = './labels.csv' 
     if not os.path.exists(label_path):
         mox.file.copy_parallel(src_url=cfg.label_url, dst_url=label_path)
     metadata_path = './metadata.csv' 
@@ -174,7 +175,17 @@ if __name__ == '__main__':
         if not os.path.exists(mindrecord_dir_train):
             os.makedirs(mindrecord_dir_train)
         print("Create Mindrecord.")
-        data_to_mindrecord_byte_image(image_dir, mindrecord_dir_train, prefix, 1, label_path, metadata_path, train_test_split=0.99)
+        
+        mindrecord_path = Path(mindrecord_dir_train)
+        mindrecord_train_path = mindrecord_path / 'train'
+
+        mindrecord_test_path = mindrecord_path / 'test'
+
+        mindrecord_path.mkdir(parents=True, exist_ok=True)
+        mindrecord_train_path.mkdir(parents=True, exist_ok=True)
+        mindrecord_test_path.mkdir(parents=True, exist_ok=True)
+        
+        data_to_mindrecord_byte_image(Path(image_dir), Path(mindrecord_dir_train), prefix, 1, Path(label_path), Path(metadata_path), train_test_split=0.99)
         print("Create Mindrecord Done, at {}".format(mindrecord_dir_train))
         # if you need use mindrecord file next time, you can save them to yours obs.
         #mox.file.copy_parallel(src_url=args_opt.mindrecord_dir_train, dst_url=os.path.join(cfg.data_url,'mindspore/train')
