@@ -118,7 +118,8 @@ cfg = edict({
 
     "data_url": 's3://yyq-2/DATA/code/yolov3/mask_detection_500',
     "train_url": 's3://yyq-2/DATA/code/yolov3/yolov3_out/',
-    "label_url": 'obs://mask-detection-hong-kong-bj4/MSPDC/dataset/label'
+    "label_url": 'obs://mask-detection-hong-kong-bj4/MSPDC/dataset/label',
+    'metadata_url': '',
 }) 
 
 if __name__ == '__main__':
@@ -128,7 +129,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_url', required=True, default=None, help='Location of data.')   
     parser.add_argument('--train_url', required=True, default=None, help='Location of training outputs.')
     parser.add_argument('--label_url', required=True, default=None, help='Location of data for labels.')
-    parser.add_argument('--dataset_url', required=True, default=None, help='Location of data for labels.')
+    parser.add_argument('--metadata_url', required=True, default=None, help='Location of data for metadata.')
+    parser.add_argument('--dataset_url', required=True, default=None, help='Location of data for images.')
 
     args_opt = parser.parse_args()
     args_opt.data_url = args_opt.dataset_url
@@ -144,15 +146,22 @@ if __name__ == '__main__':
     if args_opt.label_url[:5] != 'obs:/' and args_opt.label_url[:4] != 's3:/':
         args_opt.label_url = 'obs:/' + args_opt.label_url
     cfg.label_url = args_opt.label_url
+    
+    if args_opt.metadata_url[:5] != 'obs:/' and args_opt.metadata_url[:4] != 's3:/':
+        args_opt.metadata_url = 'obs:/' + args_opt.metadata_url
+    cfg.metadata_url = args_opt.metadata_url
 
     if os.path.exists(cfg.ckpt_dir):
         shutil.rmtree(cfg.ckpt_dir)
     data_path = './data/' 
     if not os.path.exists(data_path):
         mox.file.copy_parallel(src_url=cfg.data_url, dst_url=data_path)
-    label_path = './label/' 
+    label_path = './label.csv' 
     if not os.path.exists(label_path):
         mox.file.copy_parallel(src_url=cfg.label_url, dst_url=label_path)
+    metadata_path = './metadata.csv' 
+    if not os.path.exists(metadata_path):
+        mox.file.copy_parallel(src_url=cfg.metadata_url, dst_url=metadata_path)
 
     mindrecord_dir_train = os.path.join(data_path,'mindrecord/train')
 
@@ -163,11 +172,11 @@ if __name__ == '__main__':
     if os.path.exists(mindrecord_dir_train):
         print('The mindrecord file had exists!')
     else:
-        image_dir = os.path.join(data_path, 'accuracy')
+        image_dir = os.path.join(data_path, 'images')
         if not os.path.exists(mindrecord_dir_train):
             os.makedirs(mindrecord_dir_train)
         print("Create Mindrecord.")
-        data_to_mindrecord_byte_image(image_dir, mindrecord_dir_train, prefix, 1, label_path + 'data.json')
+        data_to_mindrecord_byte_image(image_dir, mindrecord_dir_train, prefix, 1, label_path, metadata_path, train_test_split=0.99)
         print("Create Mindrecord Done, at {}".format(mindrecord_dir_train))
         # if you need use mindrecord file next time, you can save them to yours obs.
         #mox.file.copy_parallel(src_url=args_opt.mindrecord_dir_train, dst_url=os.path.join(cfg.data_url,'mindspore/train')
