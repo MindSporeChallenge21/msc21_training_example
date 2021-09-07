@@ -10,4 +10,10 @@ Only training on ModelArts are currently supported, you are free to modify the c
 
 The file train.py allows a person to train the model, it will download the files(on OBS) using Moxing Framework and processes them.
 
+You need to copy all the files in this directory onto a OBS bucket, place them in a folder called `src`.
+
+The process of training a ModelArts is as below please follow the Model Training and Guidlines, the parameters for the creating the algorithm and training job is as follow:
+1. Parameters for creating an algorithm:
+2. Parameters for creating an 
+
 ## Testing
