@@ -27,7 +27,7 @@ class ConfigYOLOV3ResNet18:
     feature_shape = [32, 3, 352, 640]
     num_classes = 4
     nms_max_num = 5
-    _NUM_BOXES = 15
+    _NUM_BOXES = 20
 
     backbone_input_shape = [64, 64, 128, 256]
     backbone_shape = [64, 128, 256, 512]
