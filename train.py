@@ -103,8 +103,8 @@ cfg = edict({
     "device_num": 1,
     "dataset_sink_mode": True,
 
-    "lr": 0.0001,
-    "epoch_size": 300,
+    "lr": 0.001,
+    "epoch_size": 1,
     "batch_size": 32,
     "loss_scale" : 1024,
 
