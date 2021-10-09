@@ -12,9 +12,7 @@ The file train.py allows a person to train the model, it will download the files
 
 You need to copy all the files in this directory onto a OBS bucket, place them in a folder called `src`.
 
-The process of training a ModelArts is as below please follow the Model Training and Guidlines, the parameters for the creating the algorithm and training job is as follow:
-1. Parameters for creating an algorithm:
-2. Parameters for creating an 
+> The process of training on ModelArts has been thoroughly demo in [this video](https://www.youtube.com/watch?v=5UhSbU2Kfqg)
 
 ## Evaluation Example
 [Link](https://github.com/MindSporeChallenge21/msc21_evaluation_example)
