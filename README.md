@@ -16,4 +16,5 @@ The process of training a ModelArts is as below please follow the Model Training
 1. Parameters for creating an algorithm:
 2. Parameters for creating an 
 
-## Testing
+## Evaluation Example
+[Link](https://github.com/MindSporeChallenge21/msc21_evaluation_example)
